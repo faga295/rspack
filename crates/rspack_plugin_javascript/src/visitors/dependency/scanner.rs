@@ -1,7 +1,8 @@
 use rspack_core::{
   CommonJsRequireContextDependency, CompilerOptions, ConstDependency, ContextMode, ContextOptions,
-  Dependency, DependencyCategory, EsmDynamicImportDependency, ImportContextDependency,
-  ModuleDependency, RequireContextDependency, ResourceData, RuntimeGlobals,
+  Dependency, DependencyCategory, EsmDynamicImportDependency, ExportsInfoDependency,
+  ImportContextDependency, ModuleDependency, RequireContextDependency, ResourceData,
+  RuntimeGlobals,
 };
 use rspack_regex::RspackRegex;
 use swc_core::common::comments::Comments;
@@ -16,7 +17,7 @@ use swc_core::ecma::utils::{member_expr, quote_ident, quote_str};
 use swc_core::ecma::visit::{AstParentNodeRef, VisitAstPath, VisitWithPath};
 use swc_core::quote;
 
-use super::{as_parent_path, is_require_context_call, match_member_expr};
+use super::{as_parent_path, is_require_context_call, match_member_expr, member_expr_to_string};
 use crate::dependency::{
   CommonJSRequireDependency, EsmExportDependency, EsmImportDependency, URLDependency,
 };
@@ -24,6 +25,7 @@ pub const WEBPACK_HASH: &str = "__webpack_hash__";
 pub const WEBPACK_PUBLIC_PATH: &str = "__webpack_public_path__";
 pub const WEBPACK_MODULES: &str = "__webpack_modules__";
 pub const WEBPACK_RESOURCE_QUERY: &str = "__resourceQuery";
+pub const WEBPACK_EXPORTS_INFO: &str = "__webpack_exports_info__";
 
 pub struct DependencyScanner<'a> {
   pub unresolved_ctxt: &'a SyntaxContext,
@@ -249,6 +251,27 @@ impl DependencyScanner<'_> {
     Ok(())
   }
 
+  fn add_exports_info(&mut self, expr: &Expr, ast_path: &AstNodePath<AstParentNodeRef<'_>>) {
+    let members = member_expr_to_string(expr)
+      .split('.')
+      .map(|str| str.to_string())
+      .collect::<Vec<_>>();
+    if members[0].eq(WEBPACK_EXPORTS_INFO) {
+      if members.len() == 2 {
+        self.add_presentational_dependency(box ExportsInfoDependency::new(
+          None,
+          members[1].to_string(),
+          as_parent_path(ast_path),
+        ));
+      } else if members.len() >= 3 {
+        self.add_presentational_dependency(box ExportsInfoDependency::new(
+          Some(members[1..members.len() - 1].to_vec()),
+          members[members.len() - 1].to_string(),
+          as_parent_path(ast_path),
+        ));
+      }
+    }
+  }
   fn scan_require_context(
     &mut self,
     node: &CallExpr,
@@ -347,6 +370,7 @@ impl VisitAstPath for DependencyScanner<'_> {
     expr: &'ast Expr,
     ast_path: &mut AstNodePath<AstParentNodeRef<'r>>,
   ) {
+    self.add_exports_info(expr, &*ast_path);
     if let Expr::Assign(AssignExpr {
       op: AssignOp::Assign,
       left: PatOrExpr::Pat(box Pat::Ident(ident)),

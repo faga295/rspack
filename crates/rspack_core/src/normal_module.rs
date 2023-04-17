@@ -28,7 +28,7 @@ use crate::{
   contextify, dependency::EsmDynamicImportDependency, is_async_dependency,
   module_graph::ConnectionId, AssetGeneratorOptions, AssetParserOptions, BoxLoader, BoxModule,
   BuildContext, BuildInfo, BuildMeta, BuildResult, ChunkGraph, CodeGenerationResult, Compilation,
-  CompilerOptions, Context, Dependency, DependencyId, FactoryMeta, GenerateContext,
+  CompilerOptions, Context, Dependency, DependencyId, ExportsInfo, FactoryMeta, GenerateContext,
   LibIdentOptions, Module, ModuleAst, ModuleDependency, ModuleGraph, ModuleGraphConnection,
   ModuleIdentifier, ModuleType, ParseContext, ParseResult, ParserAndGenerator, Resolve,
   RuntimeGlobals, SourceType,
@@ -92,6 +92,7 @@ pub struct ModuleGraphModule {
   pub factory_meta: Option<FactoryMeta>,
   pub build_info: Option<BuildInfo>,
   pub build_meta: Option<BuildMeta>,
+  pub exports_info: Option<ExportsInfo>,
 }
 
 impl ModuleGraphModule {
@@ -116,6 +117,7 @@ impl ModuleGraphModule {
       factory_meta: None,
       build_info: None,
       build_meta: None,
+      exports_info: None,
     }
   }
 

@@ -186,6 +186,8 @@ bitflags! {
     const BASE_URI = 1 << 32;
 
     const MODULE_LOADED = 1 << 33;
+
+    const EXPORTS_INFO = 1 << 34;
   }
 }
 

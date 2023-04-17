@@ -40,6 +40,8 @@ mod options;
 pub use options::*;
 mod module_graph;
 pub use module_graph::*;
+mod exports_info;
+pub use exports_info::*;
 mod chunk;
 pub use chunk::*;
 mod dependency;

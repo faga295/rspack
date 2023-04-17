@@ -10,8 +10,8 @@ mod connection;
 pub use connection::{ConnectionId, ModuleGraphConnection};
 
 use crate::{
-  BoxModule, BoxModuleDependency, BuildInfo, BuildMeta, DependencyId, Module, ModuleGraphModule,
-  ModuleIdentifier,
+  BoxModule, BoxModuleDependency, BuildInfo, BuildMeta, DependencyId, ExportsInfo, Module,
+  ModuleGraphModule, ModuleIdentifier,
 };
 
 #[derive(Debug, Default)]
@@ -445,6 +445,12 @@ impl ModuleGraph {
     }
 
     false
+  }
+
+  pub fn get_exports_info(&self, module_identifier: &ModuleIdentifier) -> Option<ExportsInfo> {
+    self
+      .module_graph_module_by_identifier(module_identifier)
+      .and_then(|mgm| mgm.exports_info.clone())
   }
 }
 
